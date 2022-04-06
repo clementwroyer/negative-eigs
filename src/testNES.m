@@ -20,8 +20,8 @@ load('HESSIANS');
 npbs = length(pbdims);
 nmats = npbs;
 % Set dimensions 
-%maxdim = 50;
-maxdim = 8;
+maxdim = 50;
+%maxdim = 8;
 mindim = 2;
 % Select problems with appropriate dimensions
 Imat = find(pbdims<=maxdim & pbdims>=mindim);
