@@ -22,7 +22,7 @@ MAT file containing all the Hessians (exact versions+finite-difference approxima
 
 List of Eigenvalues of the matrices.
 
-### initHessCUTEST.m
+### createHessians.m
 
 MATLAB testing script used to generate our pool of matrices - produces HESSIANSNCFD.mat and HessPbmsNCFinDiff.
 Requires CUTEst/MATLAB interface.
