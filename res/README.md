@@ -12,3 +12,4 @@ NFD: Indicates that matrices produced via Newton iterations and finite differenc
 Heuristics/AllOrders: Indicates which ordering were considered (4 heuristics or all possible ones)
 RandPerm (optional): If present, indicates that a random permutation was applied to every matrix
 dimsXtoY: Problems from dimensions X to Y were considered for that run
+nonegdiags (optional): If present, indicates that matrices with negative diagonal elements were removed from the study.
