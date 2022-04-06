@@ -10,7 +10,8 @@
 %
 % NameProblem	Dimension   Best Known value (not used for this script)
 %
-% An data output file is produced that contains the following cell structures:
+% An data output file HESSIANS is produced that contains the following cell 
+% structures:
 %   pbnames: cell structure that contains the names of the CUTEst 
 %   problems that were used.
 %   pbdims: vector structure containing the corresponding dimensions.
@@ -76,11 +77,7 @@ nh = length(hFD);
 findiff = (nh>0);
 % Creating output file and structure
 %
-if findiff
-    fid2 = fopen('HessPbmsNCFinDiff','w');
-else
-    fid2 = fopen('HessPbmsNC','w');
-end
+fid2 = fopen('HessianEigs','w');
 fprintf(fid2,'Problem Name & Dimension & InitPoint (Exact) ');
 if findiff
     for i=1:nh
@@ -238,8 +235,8 @@ nb_negcurv,nbmats_total);
 fclose(fid2);
 %
 if ~findiff
-    save HESSIANSNC pbnames pbdims pbmats pbeigs nitsN pbmatsN pbeigsN findiff negdiags negdiagsN nb_negdiag nb_negcurv
+    save HESSIANS pbnames pbdims pbmats pbeigs nitsN pbmatsN pbeigsN findiff negdiags negdiagsN nb_negdiag nb_negcurv
 else
-    save HESSIANSNCFD pbnames pbdims pbmats pbeigs nitsN pbmatsN pbeigsN hFD pbmatsFD pbeigsFD pbmatsNFD pbeigsNFD findiff negdiags negdiagsFD negdiagsN negdiagsNFD nb_negdiag nb_negcurv
+    save HESSIANS pbnames pbdims pbmats pbeigs nitsN pbmatsN pbeigsN hFD pbmatsFD pbeigsFD pbmatsNFD pbeigsNFD findiff negdiags negdiagsFD negdiagsN negdiagsNFD nb_negdiag nb_negcurv
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
