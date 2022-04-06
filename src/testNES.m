@@ -14,13 +14,9 @@ clear all
 close all
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-findiff=1;
 % Load Hessian matrices
-if findiff
-    load('HESSIANSNCFD')
-else
-    load('HESSIANSNC')
-end
+load('HESSIANS');
+%
 npbs = length(pbdims);
 nmats = npbs;
 % Set dimensions 
@@ -32,6 +28,9 @@ Imat = find(pbdims<=maxdim & pbdims>=mindim);
 % Random
 randorthog=0;
 %randorthog=1;
+if randorthog
+    rng(0);
+end
 % Select the ordering options (avoid combinatorial explosion)
 if maxdim>8
     nocombi=1;
@@ -60,6 +59,8 @@ bestOrd1 = cell(nmat,1);
 minOrd2 = zeros(nmat,1);
 bestOrd2 = cell(nmat,1);
 %
+withnegdiag = 1;% Keep problems with negative diagonal elements?
+%withnegdiag = 0;% Remove problems with negative diagonal elements?
 Ikeep = [];% Problem indices
 %%%%%%%%%%%%%%%%%%%
 % Main loop
@@ -74,11 +75,11 @@ for i=1:nsel
         myH = myQ*myH*myQ';
     end 
 %   Compute the best orderings
-%    [minOrd1(auxi),bestOrd1{auxi},minOrd2(auxi),...
-%    bestOrd2{auxi}] = FindBestOrder(pbmats{Imat(i)},verbose,nocombi);
     [minOrd1(auxi),bestOrd1{auxi},minOrd2(auxi),...
     bestOrd2{auxi}] = FindBestOrder(myH,verbose,nocombi);
-    Ikeep = [Ikeep auxi];
+    if withnegdiag || ~negdiags(i)
+        Ikeep = [Ikeep auxi];
+    end
     for k=1:nFD
         fprintf('\t Init Pt (FD=%1.0e) - index %d \n',hFD(k),auxi+k);
         if pbeigsFD(Imat(i),k)<0
@@ -90,7 +91,9 @@ for i=1:nsel
             end 
             [minOrd1(auxi+k),bestOrd1{auxi+k},minOrd2(auxi+k),...
             bestOrd2{auxi+k}] = FindBestOrder(myH,verbose,nocombi);
-            Ikeep = [Ikeep auxi+k];
+            if withnegdiag || ~negdiagsFD(i,k)
+                Ikeep = [Ikeep auxi+k];
+            end
         else
             minOrd1(auxi+k)=-1;
             bestOrd1{auxi+k}=[];
@@ -109,12 +112,11 @@ for i=1:nsel
                 [myQ,~] = qr(myv);
                 myH = myQ*myH*myQ';
             end 
-%            [minOrd1(auxi+j),bestOrd1{auxi+j},minOrd2(auxi+j),...
-%            bestOrd2{auxi+j}] = FindBestOrder(...
-%            pbmatsN{Imat(i)}{j},verbose,nocombi);
             [minOrd1(auxj),bestOrd1{auxj},minOrd2(auxj),...
             bestOrd2{auxj}] = FindBestOrder(myH,verbose,nocombi);
-            Ikeep = [Ikeep auxj];
+            if withnegdiag || ~negdiagsN(i,j)
+                Ikeep = [Ikeep auxj];
+            end
         else
             minOrd1(auxj)=-1;
             bestOrd1{auxj}=[];
@@ -132,7 +134,9 @@ for i=1:nsel
                 end 
                 [minOrd1(auxj+k),bestOrd1{auxj+k},minOrd2(auxj+k),...
                 bestOrd2{auxj+k}] = FindBestOrder(myH,verbose,nocombi);
-                Ikeep = [Ikeep auxj+k];
+                if withnegdiag || ~negdiagsNFD(i,j,k)
+                    Ikeep = [Ikeep auxj+k];
+                end
             else
                 minOrd1(auxj+k)=-1;
                 bestOrd1{auxj+k}=[];
@@ -210,7 +214,7 @@ for i=1:nsel
         for jFD=0:1:nFD
             fprintf('Problem %s ItN %d FD %d - index %d\n',...
             pbnames{Imat(i)},j,jFD,auxj+jFD);
-            fprintf(fid,'%s\t%d \t %d \t',pbnames{Imat(i)},...
+            fprintf(fid,'%s \t %d \t %d \t',pbnames{Imat(i)},...
             pbdims(Imat(i)),j);
             if jFD==0
                 fprintf(fid,'Exact \t');
