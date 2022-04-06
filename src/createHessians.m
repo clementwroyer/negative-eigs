@@ -119,9 +119,11 @@ if nitsN>0
 else
     pbmatsN = [];
     pbeigsN = [];
+    negdiagsN = [];
     if findiff
         pbmatsNFD = [];
         pbeigsNFD = [];
+        negdiagsFD = [];
     end
 end
 %
