@@ -18,19 +18,28 @@ close all
 load('HESSIANS');
 %
 npbs = length(pbdims);
-nmats = npbs;
-% Set dimensions 
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Setting up
+%
+% Choose allowed dimensions 
 maxdim = 50;
 %maxdim = 8;
 mindim = 2;
+%mindim = 4;
 % Select problems with appropriate dimensions
 Imat = find(pbdims<=maxdim & pbdims>=mindim);
-% Random
-randorthog=0;
-%randorthog=1;
-if randorthog
-    rng(0);
-end
+npbsel = length(pbdims(Imat)); % Number of problems selected
+%
+% Iterations to be kept
+nitsNsel=nitsN;
+% Finite difference values to be kept
+selFD = [1 2 3 4];
+%selFD = [1];
+nFDsel = length(selFD);
+% Total number of matrices
+nmat = npbsel*(1+nitsNsel)*nFDsel;
+%
 % Select the ordering options (avoid combinatorial explosion)
 if maxdim>8
     nocombi=1;
@@ -38,141 +47,161 @@ else
     nocombi=0;
 end
 %nocombi=1;
-verbose=2;%Verbose level in FindBestOrder subroutine
+%nocombi=-1;
 % Plot all combinations in combinatorial case?
 plotcombi=0;
-nsel = length(pbdims(Imat)); % Number of problems selected
-if findiff 
-    nFD = length(hFD);
-else
-    nFD = 0;
+%
+% Random orthogonal transformation
+randorthog=0;
+%randorthog=1;
+% Random permutation matrix
+randper=0;
+%randper=1;%
+if randper && randorthog
+    randorthog=0;
 end
-% Total number of matrices (original+Newton iterations)
-nmat = nsel*(1+nitsN)*(1+nFD);
-% TO DO - Adjust numbering
+if randorthog || randper 
+    rng(0);
+end
+%
+verbose=0;%Verbose level in FindBestOrder subroutine
 %
 % Pre-allocate output data structures
 %   minOrd* represents the minimal value of a certain ordering
 %   bestOrd* contains the actual ordering that achieves the best value
-minOrd1 = zeros(nmat,1);
-bestOrd1 = cell(nmat,1);
-minOrd2 = zeros(nmat,1);
-bestOrd2 = cell(nmat,1);
+minOrd1 = zeros(npbsel,nFDsel,1+nitsNsel);
+bestOrd1 = cell(npbsel,nFDsel,1+nitsNsel);
+minOrd2 = zeros(npbsel,nFDsel,1+nitsNsel);
+bestOrd2 = cell(npbsel,nFDsel,1+nitsNsel);
 %
 withnegdiag = 1;% Keep problems with negative diagonal elements?
 %withnegdiag = 0;% Remove problems with negative diagonal elements?
-Ikeep = [];% Problem indices
+Ikeep = zeros(npbsel,nFDsel,1+nitsNsel);% 
 %%%%%%%%%%%%%%%%%%%
 % Main loop
-for i=1:nsel
-    auxi = (nFD+1)*(nitsN+1)*(i-1)+1;
-    fprintf('Problem %s\n',pbnames{Imat(i)});
-    fprintf('\t Init pt (Exact) - index %d \n',auxi);
-    myH = pbmats{Imat(i)};
+for i=1:npbsel
+%    auxi = nFDsel*(nitsNsel+1)*(i-1)+1;
+    ipb=Imat(i);
+    fprintf('Problem %s\n',pbnames{ipb});
     if randorthog
-        myv = randn(pbdims(Imat(i)),1);
+        myv = randn(pbdims(ipb),1);
         [myQ,~] = qr(myv);
-        myH = myQ*myH*myQ';
-    end 
-%   Compute the best orderings
-    [minOrd1(auxi),bestOrd1{auxi},minOrd2(auxi),...
-    bestOrd2{auxi}] = FindBestOrder(myH,verbose,nocombi);
-    if withnegdiag || ~negdiags(i)
-        Ikeep = [Ikeep auxi];
+    elseif randper
+        myQ = eye(pbdims(ipb));
+        myQ = myQ(randperm(pbdims(ipb)),:);
     end
-    for k=1:nFD
-        fprintf('\t Init Pt (FD=%1.0e) - index %d \n',hFD(k),auxi+k);
-        if pbeigsFD(Imat(i),k)<0
-            myH = pbmatsFD{Imat(i)}{k}
-            if randorthog
-                myv = randn(pbdims(Imat(i)),1);
-                [myQ,~] = qr(myv);
-                myH = myQ*myH*myQ';
-            end 
-            [minOrd1(auxi+k),bestOrd1{auxi+k},minOrd2(auxi+k),...
-            bestOrd2{auxi+k}] = FindBestOrder(myH,verbose,nocombi);
-            if withnegdiag || ~negdiagsFD(i,k)
-                Ikeep = [Ikeep auxi+k];
-            end
+%
+%   Loop over finite difference values with the original matrix
+    for iFD=1:nFDsel
+        iselFD = selFD(iFD);
+        valFD = hFD(iselFD);
+        if valFD==0
+            fprintf('\t Init pt (Exact) \n');
         else
-            minOrd1(auxi+k)=-1;
-            bestOrd1{auxi+k}=[];
-            minOrd2(auxi+k)=-1;
-            bestOrd2{auxi+k}=[];
-        end
-    end
-    auxi = auxi+nFD;
-    for j=1:nitsN
-        auxj = auxi+(nFD+1)*(j-1)+1;
-        fprintf('\t It Newton %d - index %d \n',j,auxj);
-        if pbeigsN(Imat(i),j)<0
-            myH = pbmatsN{Imat(i)}{j};
-            if randorthog
-                myv = randn(pbdims(Imat(i)),1);
-                [myQ,~] = qr(myv);
+            fprintf('\t Init Pt (FD=%1.0e) \n',valFD);
+        end 
+        if pbeigs(ipb,selFD(iFD),1)<0
+            myH = pbmats{ipb}{iselFD}{1};
+            if randorthog || randper
                 myH = myQ*myH*myQ';
-            end 
-            [minOrd1(auxj),bestOrd1{auxj},minOrd2(auxj),...
-            bestOrd2{auxj}] = FindBestOrder(myH,verbose,nocombi);
-            if withnegdiag || ~negdiagsN(i,j)
-                Ikeep = [Ikeep auxj];
-            end
-        else
-            minOrd1(auxj)=-1;
-            bestOrd1{auxj}=[];
-            minOrd2(auxj)=-1;
-            bestOrd2{auxj}=[];
-        end
-        for k=1:nFD
-            fprintf('\t It Newton %d (FD=%1.0e) -index %d\n',j,hFD(k),auxj+k); 
-            if pbeigsNFD(Imat(i),j,k)<0
-                myH = pbmatsNFD{Imat(i)}{j}{k};
-                if randorthog
-                    myv = randn(pbdims(Imat(i)),1);
-                    [myQ,~] = qr(myv);
-                    myH = myQ*myH*myQ';
-                end 
-                [minOrd1(auxj+k),bestOrd1{auxj+k},minOrd2(auxj+k),...
-                bestOrd2{auxj+k}] = FindBestOrder(myH,verbose,nocombi);
-                if withnegdiag || ~negdiagsNFD(i,j,k)
-                    Ikeep = [Ikeep auxj+k];
+                if (sum(diag(myH)<0)>0)
+                    mynegdiag=1;
+                else
+                    mynegdiag=0;
                 end
             else
-                minOrd1(auxj+k)=-1;
-                bestOrd1{auxj+k}=[];
-                minOrd2(auxj+k)=-1;
-                bestOrd2{auxj+k}=[];
+                mynegdiag=negdiags(ipb,iselFD,1);
+            end 
+            [minOrd1(ipb,iselFD,1),bestOrd1{ipb}{iselFD}{1},...
+            minOrd2(ipb,iselFD,1),...
+            bestOrd2{ipb}{iselFD}{1}] = FindBestOrder(myH,verbose,nocombi);
+%            if withnegdiag && ~negdiags(ipb,iselFD,1)
+            if withnegdiag && ~mynegdiag
+                Ikeep(ipb,iselFD,1) = 1;
+            end
+        else
+            minOrd1(ipb,iselFD,1)=-1;
+            bestOrd1{ipb}{iselFD}{1}=[];
+            minOrd2(ipb,iselFD,1)=-1;
+            bestOrd2{ipb}{iselFD}{1}=[];
+        end
+    end
+    
+%   Loop over the values with the Newton matrices
+    for jN=1:nitsN
+        for iFD=1:nFDsel
+            iselFD = selFD(iFD);
+            valFD = hFD(iselFD);
+            if valFD==0
+                fprintf('\t It Newton %d (Exact) \n',jN);
+            else
+                fprintf('\t It Newton %d (FD=%1.0e) \n',jN,valFD);
+            end 
+            if pbeigs(ipb,iselFD,1+jN)<0
+                myH = pbmats{ipb}{iselFD}{1+jN};
+                if randorthog || randper
+                    myH = myQ*myH*myQ';
+                    if (sum(diag(myH)<0)>0)
+                        mynegdiag = 1;
+                    else
+                        mynegdiag = 0;
+                    end
+                else
+                    mynegdiag = negdiags(ipb,iselFD,1+jN);
+                end 
+                [minOrd1(ipb,iselFD,1+jN),bestOrd1{ipb}{iselFD}{1+jN},...
+                minOrd2(ipb,iselFD,1+jN),...
+                bestOrd2{ipb}{iselFD}{1+jN}] = FindBestOrder(...
+                myH,verbose,nocombi);
+%                if withnegdiag && ~negdiags(ipb,iselFD,1+jN)
+                if withnegdiag && ~mynegdiag
+                    Ikeep(ipb,iselFD,1+jN) = 1;
+                end
+            else
+                minOrd1(ipb,iselFD,1+jN)=-1;
+                bestOrd1{ipb}{iselFD}{1+jN}=[];
+                minOrd2(ipb,iselFD,1+jN)=-1;
+                bestOrd2{ipb}{iselFD}{1+jN}=[];
             end
         end
     end
 end
+%
 %%%%%%%%%%%%%%%%%%%
 %
 % Save the relevant data into a .mat file
-save DATANESCUTEST pbdims nitsN nFD Imat Ikeep minOrd1 bestOrd1 minOrd2 bestOrd2
+save DATANESCUTEST pbdims nitsN selFD Imat Ikeep minOrd1 bestOrd1 minOrd2 bestOrd2
 %
 %%%%%%%%%%%%%%%%%%%
 % Write the desired outputs in a data file
 fid = fopen('ResultsHessianCUTEst','w');
 fprintf(fid,'Minimum allowed dimension: %d\n\n',mindim);
 fprintf(fid,'Maximum allowed dimension: %d\n\n',maxdim);
-if nocombi
-    fprintf(fid,'Orderings:\n');
-    fprintf(fid,'\t 1 - 1:n\n');
-    fprintf(fid,'\t 2 - Smallest diag to largest diag\n');
-    fprintf(fid,'\t 3 - Largest diag to smallest diag\n');
-    fprintf(fid,'\t 4 - Flipflop smallest/largest diag\n\n');
-else
+switch nocombi
+    case 1
+        fprintf(fid,'Orderings:\n');
+        fprintf(fid,'\t 1 - 1:n\n');
+        fprintf(fid,'\t 2 - Smallest diag to largest diag\n');
+        fprintf(fid,'\t 3 - Largest diag to smallest diag\n');
+        fprintf(fid,'\t 4 - Flipflop smallest/largest diag\n\n');
+    case -1
+        fprintf(fid,'Ordering:\n');
+        fprintf(fid,'\t 1 - 1:n\n');
+    otherwise
     fprintf(fid,'Orderings: Combinatorial\n\n');
 end
 % Determine winners between Build 1 and Build 2
-nkeep = length(Ikeep);
+%nkeep = length(Ikeep);
+auxkeep = find(Ikeep==1);
+%size(auxkeep)
+nkeep = sum(Ikeep,'all');
+%selFD;
 nkeepm2 = 0;
 nkeepm3 = 0;
 bestmin1 = (minOrd1<minOrd2);
-sb1 = sum(bestmin1(Ikeep));
+sb1 = sum(bestmin1(auxkeep),'all');
 bestmin2 = (minOrd1>minOrd2);
-sb2 = sum(bestmin2(Ikeep));
+sb2 = sum(bestmin2(auxkeep),'all');
 fprintf(fid,...
 'Build type 1 gave the best order for %d out of %d matrices.\n',...
 sb1,nkeep);
@@ -183,13 +212,21 @@ fprintf(fid,...
 'Both builds gave the best order for %d out of %d matrices.\n\n',...
 nkeep-sb1-sb2,nkeep);
 % Counters in the case of dimension-independent strategies
-if nocombi
-    countbest1=[0 0 0 0];
-    countbest1m2 = [0 0 0 0];
-    countbest1m3 = [0 0 0 0];
-    countbest2=[0 0 0 0];
-    countbest2m2 = [0 0 0 0];
-    countbest2m3 = [0 0 0 0];
+switch nocombi
+    case 1
+        countbest1=[0 0 0 0];
+        countbest1m2 = [0 0 0 0];
+        countbest1m3 = [0 0 0 0];
+        countbest2=[0 0 0 0];
+        countbest2m2 = [0 0 0 0];
+        countbest2m3 = [0 0 0 0];
+    case -1
+        countbest1=[0];
+        countbest1m2 = [0];
+        countbest1m3 = [0];
+        countbest2=[0];
+        countbest2m2 = [0];
+        countbest2m3 = [0];
 end
 %
 fprintf(fid,'Problem \t| Dim | It Newton | FinDiff | MinEig |');
@@ -199,21 +236,23 @@ fprintf(fid,'-----------------------------------------------------\n\n');
 % Detailed results for all problems
 % Outer loop on CUTEst problems, inner loop on the various matrices 
 % with respect to that problem.
-for i=1:nsel
-    if ~nocombi 
-        Pi = perms(1:pbdims(Imat(i)));
+for i=1:npbsel
+    switch nocombi
+        case 0
+            Pi = perms(1:pbdims(Imat(i)));
+            nways=factorial(pbdims(Imat(i)));
+        case 1
+            nways=4;
+        case -1
+            nways=1;
     end
-    if nocombi
-        nways=4;
-    else
-        nways=factorial(pbdims(Imat(i)));
-    end
-    auxi = (nFD+1)*(nitsN+1)*(i-1);
-    auxj = auxi + 1;
+%    auxi = (nFD+1)*(nitsN+1)*(i-1);
+%    auxj = auxi + 1;
     for j=0:1:nitsN
-        for jFD=0:1:nFD
-            fprintf('Problem %s ItN %d FD %d - index %d\n',...
-            pbnames{Imat(i)},j,jFD,auxj+jFD);
+        for iFD=1:nFDsel
+            jFD = selFD(iFD);
+            fprintf('Problem %s ItN %d FD %1.0e\n',...
+            pbnames{Imat(i)},j,hFD(jFD));
             fprintf(fid,'%s \t %d \t %d \t',pbnames{Imat(i)},...
             pbdims(Imat(i)),j);
             if jFD==0
@@ -221,72 +260,63 @@ for i=1:nsel
             else
                 fprintf(fid,'%1.0e \t',hFD(jFD));
             end
-            if j==0 
-                if jFD==0
-                    fprintf(fid,'%1.3e \t\t',pbeigs(Imat(i)));
-                else
-                    fprintf(fid,'%1.3e \t\t',pbeigsFD(Imat(i),jFD));
-                end
-            else
-                if jFD==0
-                    fprintf(fid,'%1.3e \t\t',pbeigsN(Imat(i),j));
-                else
-                    fprintf(fid,'%1.3e \t\t',pbeigsNFD(Imat(i),j,jFD));
-                end
-            end 
-            if ismember(auxj+jFD,Ikeep)
+            fprintf(fid,'%1.3e \t\t',pbeigs(Imat(i),jFD,1+j));
+            if Ikeep(i,jFD,1+j)
                 if pbdims(Imat(i))>=3
                     nkeepm2 = nkeepm2+1;
                     if pbdims(Imat(i))>3
                         nkeepm3 = nkeepm3+1;
                     end
                 end
-                if bestmin1(auxj+jFD)
-                    fprintf(fid,'1 \t %d \t',minOrd1(auxj+jFD));
-                    for k=1:length(bestOrd1{auxj+jFD})
-                        if nocombi || (~nocombi & plotcombi)
-                            fprintf(fid,'%d, ',bestOrd1{auxj+jFD}(k));
-                            if nocombi
-                                countbest1(bestOrd1{auxj+jFD}(k)) = countbest1(...
-                                bestOrd1{auxj+jFD}(k))+1;
+                if bestmin1(i,jFD,1+j)
+                    fprintf(fid,'1 \t %d \t',minOrd1(i,jFD,1+j));
+                    for k=1:length(bestOrd1{i}{jFD}{1+j})
+                        if (nocombi~=0) || (~nocombi & plotcombi)
+                            fprintf(fid,'%d, ',bestOrd1{i}{jFD}{1+j}(k));
+                            if (nocombi~=0)
+                                countbest1(...
+                                bestOrd1{i}{jFD}{1+j}(k)) = countbest1(...
+                                bestOrd1{i}{jFD}{1+j}(k))+1;
                                 if pbdims(Imat(i))>=3
                                     countbest1m2(...
-                                    bestOrd1{auxj+jFD}(k)) = countbest1m2(...
-                                    bestOrd1{auxj+jFD}(k))+1;
+                                    bestOrd1{i}{jFD}{1+j}(k)) = countbest1m2(...
+                                    bestOrd1{i}{jFD}{1+j}(k))+1;
                                     if pbdims(Imat(i))>3
                                         countbest1m3(...
-                                        bestOrd1{auxj+jFD}(k)) = countbest1m3(...
-                                        bestOrd1{auxj+jFD}(k))+1;
+                                        bestOrd1{i}{jFD}{1+j}(k)) = countbest1m3(...
+                                        bestOrd1{i}{jFD}{1+j}(k))+1;
                                     end
                                 end
                             end
                         else
                             fprintf(fid,'[ ');
                             for l=1:pbdims(Imat(i))
-                                fprintf(fid,'%d ',Pi(bestOrd1{auxj+jFD}(k),l));
+                                fprintf(fid,'%d ',Pi(...
+                                bestOrd1{i}{jFD}{1+j}(k),l));
                             end
                             fprintf(fid,'],');
                         end
                     end                
                     fprintf(fid,' \n');
                 else
-                    if bestmin2(auxj+jFD)
-                        fprintf(fid,'2 \t %d \t',minOrd2(auxj+jFD));
-                        for k=1:length(bestOrd2{auxj+jFD})
-                            if nocombi || (~nocombi & plotcombi)
-                                fprintf(fid,'%d, ',bestOrd2{auxj+jFD}(k));
-                                if nocombi
+                    if bestmin2(i,jFD,1+j)
+                        fprintf(fid,'2 \t %d \t',minOrd2(i,jFD,1+j));
+                        for k=1:length(bestOrd2{i}{jFD}{1+j})
+                            if (nocombi~=0) || (~nocombi & plotcombi)
+                                fprintf(fid,'%d, ',...
+                                bestOrd2{i}{jFD}{1+j}(k));
+                                if (nocombi~=0)
                                     countbest2(...
-                                    bestOrd2{auxj+jFD}(k)) = countbest2(...
-                                    bestOrd2{auxj+jFD}(k))+1;
+                                    bestOrd2{i}{jFD}{1+j}(k)) = countbest2(...
+                                    bestOrd2{i}{jFD}{1+j}(k))+1;
                                     if pbdims(Imat(i))>=3
                                         countbest2m2(...
-                                        bestOrd2{auxj+jFD}(k)) = countbest2m2(...
-                                        bestOrd2{auxj+jFD}(k))+1;
+                                        bestOrd2{i}{jFD}{1+j}(k)) = countbest2m2(...
+                                        bestOrd2{i}{jFD}{1+j}(k))+1;
                                         if pbdims(Imat(i))>3
                                             countbest2m3(...
-                                            bestOrd2{auxj+jFD}(k)) = countbest2m3(...
-                                            bestOrd2{auxj+jFD}(k))+1;
+                                            bestOrd2{i}{jFD}{1+j}(k)) = countbest2m3(...
+                                            bestOrd2{i}{jFD}{1+j}(k))+1;
                                         end
                                     end
                                 end
@@ -294,43 +324,43 @@ for i=1:nsel
                         end
                         fprintf(fid,' \n');
                     else
-                        fprintf(fid,'1+2 \t %d \t',minOrd1(auxj+jFD));
-                        for k=1:length(bestOrd1{auxj+jFD})
-                            if nocombi || (~nocombi & plotcombi)
-                                fprintf(fid,'%d, ',bestOrd1{auxj+jFD}(k));
-                                if nocombi
+                        fprintf(fid,'1+2 \t %d \t',minOrd1(i,jFD,1+j));
+                        for k=1:length(bestOrd1{i}{jFD}{1+j})
+                            if (nocombi~=0) || (~nocombi & plotcombi)
+                                fprintf(fid,'%d, ',bestOrd1{i}{jFD}{1+j}(k));
+                                if (nocombi~=0)
                                     countbest1(...
-                                    bestOrd1{auxj+jFD}(k)) = countbest1(...
-                                    bestOrd1{auxj+jFD}(k))+1;
+                                    bestOrd1{i}{jFD}{1+j}(k)) = countbest1(...
+                                    bestOrd1{i}{jFD}{1+j}(k))+1;
                                     if pbdims(Imat(i))>=3
                                         countbest1m2(...
-                                        bestOrd1{auxj+jFD}(k)) = countbest1m2(...
-                                        bestOrd1{auxj+jFD}(k))+1;
+                                        bestOrd1{i}{jFD}{1+j}(k)) = countbest1m2(...
+                                        bestOrd1{i}{jFD}{1+j}(k))+1;
                                         if pbdims(Imat(i))>3
                                             countbest1m3(...
-                                            bestOrd1{auxj+jFD}(k)) = countbest1m3(...
-                                            bestOrd1{auxj+jFD}(k))+1;
+                                            bestOrd1{i}{jFD}{1+j}(k)) = countbest1m3(...
+                                            bestOrd1{i}{jFD}{1+j}(k))+1;
                                         end
                                     end
                                 end
                             end
                         end
                         fprintf(fid,'+');
-                        for k=1:length(bestOrd2{auxj+jFD})
-                            if nocombi || (~nocombi & plotcombi)
-                                fprintf(fid,'%d, ',bestOrd2{auxj+jFD}(k));
-                                if nocombi
+                        for k=1:length(bestOrd2{i}{jFD}{1+j})
+                            if (nocombi~=0) || (~nocombi & plotcombi)
+                                fprintf(fid,'%d, ',bestOrd2{i}{jFD}{1+j}(k));
+                                if (nocombi~=0)
                                     countbest2(...
-                                    bestOrd2{auxj+jFD}(k)) = countbest2(...
-                                    bestOrd2{auxj+jFD}(k))+1;
+                                    bestOrd2{i}{jFD}{1+j}(k)) = countbest2(...
+                                    bestOrd2{i}{jFD}{1+j}(k))+1;
                                     if pbdims(Imat(i))>=3
                                         countbest2m2(...
-                                        bestOrd2{auxj+jFD}(k)) = countbest2m2(...
-                                        bestOrd2{auxj+jFD}(k))+1;
+                                        bestOrd2{i}{jFD}{1+j}(k)) = countbest2m2(...
+                                        bestOrd2{i}{jFD}{1+j}(k))+1;
                                         if pbdims(Imat(i))>3
                                             countbest2m3(...
-                                            bestOrd2{auxj+jFD}(k)) = countbest2m3(...
-                                            bestOrd2{auxj+jFD}(k))+1;
+                                            bestOrd2{i}{jFD}{1+j}(k)) = countbest2m3(...
+                                            bestOrd2{i}{jFD}{1+j}(k))+1;
                                         end
                                     end
                                 end
@@ -343,7 +373,6 @@ for i=1:nsel
                 fprintf(fid,'- \t - \t -\n');
             end
         end
-        auxj = auxj+nFD+1;
     end
 end
 %
@@ -352,7 +381,7 @@ end
 % For dimension-independent strategies, plot the percentage of pbms for 
 % which each strategy was the best
 fprintf(fid,'=============================================================\n');
-if nocombi
+if (nocombi==1)
     countbest1 = (100/nkeep)*countbest1;
     countbest2 = (100/nkeep)*countbest2;
     fprintf(fid,'Percentage of problems with best strategies [1 2 3 4] ');
