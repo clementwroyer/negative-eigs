@@ -24,33 +24,6 @@
 %   0/1 values, indicating whether the corresponding matrix in pbmats has a 
 %   negative diagonal element.
 %
-% Other optional fields may be saved:
-%   pbmatsN: cell structure containing matrices. These matrices are 
-%   the Hessian matrices computed at points obtaining by applying Newton's 
-%   method to  initial points of every CUTEst 
-%   problem in the test set.
-%   pbeigsN: matrix structure containing the minimum eigenvalues of every 
-%   matrix in pbmatsN (these eigenvalues are computed via eigs).
-%   negdiagsN: vector structure of same length than pbeigs that contains 
-%   0/1 values, indicating whether the corresponding matrix in pbmats has a 
-%   negative diagonal element.
-%   pbmatsFD: cell structure containing matrices. These matrices are 
-%   the Hessian matrices computed at the initial points of every CUTEst 
-%   problem in the test set.
-%   pbeigsFD: vector structure containing the minimum eigenvalues of every 
-%   matrix in pbmats (these eigenvalues are computed via eigs).
-%   negdiagsFD: vector structure of same length than pbeigs that contains 
-%   0/1 values, indicating whether the corresponding matrix in pbmats has a 
-%   negative diagonal element.
-%   pbmatsNFD: cell structure containing matrices. These matrices are 
-%   the Hessian matrices computed at the initial points of every CUTEst 
-%   problem in the test set.
-%   pbeigsNFD: vector structure containing the minimum eigenvalues of every 
-%   matrix in pbmats (these eigenvalues are computed via eigs).
-%   negdiagsNFD: vector structure of same length than pbeigs that contains 
-%   0/1 values, indicating whether the corresponding matrix in pbmats has a 
-%   negative diagonal element.
-%
 % Implementation: C. W. Royer 
 % Started July 29, 2021
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,68 +37,45 @@ fid = fopen('ListPbmsNC','r');
 %fid = fopen('ListOnePb','r');
 PROBS = textscan(fid,'%s %d %f');
 fclose(fid);
-%fid2 = fopen('HessOnePb','w');
 %
 npbs=length(PROBS{1});
 pbnames = PROBS{1};
 pbdims = PROBS{2};
 BVALS = PROBS{3};
 %
-findiff=1;%Using finite difference approximation to the Hessian matrix
-hFD = [1e-2,1e-4,1e-6];
+%Using finite difference approximation to the Hessian matrix
+hFD = [0,1e-2,1e-4,1e-6];
+%hFD=[0];
+%hFD = [];
 nh = length(hFD);
-findiff = (nh>0);
+% Optional: Build more matrices by performing iterations of Newton's method
+nitsN = 2;
 % Creating output file and structure
 %
 fid2 = fopen('HessianEigs','w');
-fprintf(fid2,'Problem Name & Dimension & InitPoint (Exact) ');
-if findiff
-    for i=1:nh
+fprintf(fid2,'Problem Name & Dimension ');
+for i=1:nh
+    if hFD(i)==0
+        fprintf(fid2,' & InitPoint (Exact) ');
+    else
         fprintf(fid2,' & InitPoint (FD=%1.2e)',hFD(i));
     end
 end
-% Defining structures to store matrices and eigenvalue information
-pbmats = cell(npbs,1);
-pbeigs = zeros(npbs,1);
-negdiags = zeros(npbs,1);
-% Optional: Use finite-differences to approximate the matrices
-if findiff
-    pbmatsFD = cell(npbs,nh);
-    pbeigsFD = zeros(npbs,nh);
-    negdiagsFD = zeros(npbs,nh);
-end
-%
-% Optional: Perform Newton's iteration to get more Hessian matrices
-nitsN = 2;
-for i=1:nitsN
-    fprintf(fid2,'& It %d Newton (Exact)',i);
-%   Optional: Use finite differences to approximate those matrices
-    if findiff
-        for j=1:nh
-            fprintf(fid2,'& It %d Newton (FD=%1.2e)',i,hFD(j));
+for j=1:nitsN
+    for i=1:nh
+        if hFD(i)==0
+            fprintf(fid2,' & It %d Newton (Exact) ',j);
+        else
+            fprintf(fid2,' & It %d Newton (FD=%1.2e)',j,hFD(i));
         end
     end
 end
 fprintf(fid2,'\n\n');
-if nitsN>0
-    pbmatsN = cell(npbs,nitsN);
-    pbeigsN = zeros(npbs,nitsN);
-    negdiagsN = zeros(npbs,nitsN);
-    if findiff
-        pbmatsNFD = cell(npbs,nitsN,nh);
-        pbeigsNFD = zeros(npbs,nitsN,nh);
-        negdiagsNFD = zeros(npbs,nitsN,nh);
-    end
-else
-    pbmatsN = [];
-    pbeigsN = [];
-    negdiagsN = [];
-    if findiff
-        pbmatsNFD = [];
-        pbeigsNFD = [];
-        negdiagsFD = [];
-    end
-end
+% Defining structures to store matrices and eigenvalue information
+pbmats = cell(npbs,nh,1+nitsN);
+pbeigs = zeros(npbs,nh,1+nitsN);
+negdiags = zeros(npbs,nh,1+nitsN);
+fprintf(fid2,'\n\n');
 %
 % Number of matrices with negative diagonal elements
 nb_negdiag=0;
@@ -154,73 +104,86 @@ for numpb = 1:npbs
 	fprintf('%s & %d\n',name,n);
     g0 = cutest_grad(x0);
 	H0 = cutest_hess(x0);
-    pbmats{numpb}=H0;
-    if (sum(diag(H0)<0)>0)
-        negdiags(numpb)=1;
-        nb_negdiag=nb_negdiag+1;
-    end
-	[~,l0] = eigs(H0,1,'sa');
-    pbeigs(numpb)=l0;
-    if l0<0
-        nb_negcurv=nb_negcurv+1;
-    end
-	fprintf(fid2,'%s & %d & %1.3e (%d) ',name,n,l0,negdiags(numpb));
-    if findiff
-        for iFD=1:nh
+
+%   Compute matrices related to the initial point
+
+    for iFD=1:nh
+        if hFD(iFD)==0
+            pbmats{numpb}{iFD}{1}=H0;
+            if (sum(diag(H0)<0)>0)
+                negdiags(numpb,iFD,1)=1;
+                nb_negdiag=nb_negdiag+1;
+            end
+	        [~,l0] = eigs(H0,1,'sa');
+            pbeigs(numpb,iFD,1)=l0;
+            if l0<0
+                nb_negcurv=nb_negcurv+1;
+            end
+            fprintf(fid2,'%s & %d & %1.3e (%d) ',name,n,l0,...
+            negdiags(numpb,iFD,1));
+        else
             [H0FD,flagFD] = findiffapprox(x0,@(x) cutest_obj(x),hFD(iFD));
-            pbmatsFD{numpb}{iFD}=H0FD;
+            pbmats{numpb}{iFD}{1}=H0FD;
             if ~flagFD
                 if (sum(diag(H0FD<0))>0)
-                    negdiagsFD(numpb,iFD)=1;
+                    negdiags(numpb,iFD,1)=1;
                     nb_negdiag=nb_negdiag+1;
                 end
                 [~,l0FD] = eigs(H0FD,1,'sa');
-                pbeigsFD(numpb,iFD)=l0FD;
+                pbeigs(numpb,iFD,1)=l0FD;
                 if l0FD<0
                     nb_negcurv=nb_negcurv+1;
                 end
             else
-                pbeigsFD(numpb,iFD)=NaN; 
+                pbeigs(numpb,iFD,1)=NaN; 
             end
-	        fprintf(fid2,'& %1.3e (%d) ',l0FD,negdiagsFD(numpb,iFD));
+	        fprintf(fid2,'& %1.3e (%d) ',l0FD,...
+            negdiags(numpb,iFD,1));
         end
     end
 %
-%   Optional: perform iterations of Newton's method to collect  more matrices
+%   Optional: perform iterations of Newton's method to collect more matrices
 %
-    for i=1:nitsN
+    for jN=1:nitsN
         x0 = x0 - H0 \ g0;
         g0 = cutest_grad(x0);
         H0 = cutest_hess(x0);
-        pbmatsN{numpb}{i}=H0;
-        if (sum(diag(H0)<0)>0)
-            negdiagsN(numpb,i)=1;
-            nb_negdiag=nb_negdiag+1;
-        end
-	    [~,l0] = eigs(H0,1,'sa');
-        if l0<0
-            nb_negcurv=nb_negcurv+1;
-        end
-        pbeigsN(numpb,i)=l0;
-	    fprintf(fid2,'& %1.3e (%d) ',l0,negdiagsN(numpb,i));
-        if findiff
-            for iFD=1:nh
+
+%             
+        for iFD=1:nh
+
+            if hFD(iFD)==0
+%               Exact matrix
+                pbmats{numpb}{iFD}{1+jN}=H0;
+                if (sum(diag(H0)<0)>0)
+                    negdiags(numpb,iFD,1+jN)=1;
+                    nb_negdiag=nb_negdiag+1;
+                end
+	            [~,l0] = eigs(H0,1,'sa');
+                if l0<0
+                    nb_negcurv=nb_negcurv+1;
+                end
+                pbeigs(numpb,iFD,1+jN)=l0;
+                fprintf(fid2,'& %1.3e (%d) ',l0,negdiags(numpb,iFD,1+jN));
+            else
+%               Finite-difference formula
                 [H0FD,flagFD] = findiffapprox(x0,@(x) cutest_obj(x),hFD(iFD));
-                pbmatsNFD{numpb}{i}{iFD}=H0FD;
+                pbmats{numpb}{iFD}{1+jN}=H0FD;
                 if ~flagFD
                     if (sum(diag(H0FD)<0)>0)
-                        negdiagsNFD(numpb,i,iFD)=1;
+                        negdiags(numpb,iFD,1+jN)=1;
                         nb_negdiag=nb_negdiag+1;
                     end
                     [~,l0FD] = eigs(H0FD,1,'sa');
-                    pbeigsNFD(numpb,i,iFD)=l0FD;
+                    pbeigs(numpb,iFD,1+jN)=l0FD;
                     if l0FD<0
                         nb_negcurv=nb_negcurv+1;
                     end
                 else
-                    pbeigsNFD(numpb,i,iFD)=NaN;
+                    pbeigs(numpb,iFD,1+jN)=NaN;
                 end
-	            fprintf(fid2,'& %1.3e (%d) ',l0FD,negdiagsNFD(numpb,i,iFD));
+	            fprintf(fid2,'& %1.3e (%d) ',l0FD,...
+                negdiags(numpb,iFD,1+jN));
             end
         end
     end
@@ -228,7 +191,7 @@ for numpb = 1:npbs
 %
 end
 %
-nbmats_total = (nitsN+1)*(nh+1)*npbs;
+nbmats_total = (nitsN+1)*nh*npbs;
 fprintf('Matrices with negative diagonal elements: %d out of %d\n',...
 nb_negdiag,nbmats_total);
 fprintf('Matrices with negative curvature: %d out of %d\n',...
@@ -236,9 +199,10 @@ nb_negcurv,nbmats_total);
 %
 fclose(fid2);
 %
-if ~findiff
-    save HESSIANS pbnames pbdims pbmats pbeigs nitsN pbmatsN pbeigsN findiff negdiags negdiagsN nb_negdiag nb_negcurv
-else
-    save HESSIANS pbnames pbdims pbmats pbeigs nitsN pbmatsN pbeigsN hFD pbmatsFD pbeigsFD pbmatsNFD pbeigsNFD findiff negdiags negdiagsFD negdiagsN negdiagsNFD nb_negdiag nb_negcurv
-end
+save HESSIANS pbnames pbdims pbmats pbeigs nitsN hFD negdiags nb_negdiag nb_negcurv
+%if ~findiff
+%   save HESSIANS pbnames pbdims pbmats pbeigs nitsN pbmatsN pbeigsN findiff negdiags negdiagsN nb_negdiag nb_negcurv
+%else
+%    save HESSIANS pbnames pbdims pbmats pbeigs nitsN pbmatsN pbeigsN hFD pbmatsFD pbeigsFD pbmatsNFD pbeigsNFD findiff negdiags negdiagsFD negdiagsN negdiagsNFD nb_negdiag nb_negcurv
+%end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

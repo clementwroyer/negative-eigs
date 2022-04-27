@@ -1,4 +1,6 @@
-Problem Name & Dimension & InitPoint (Exact)  & InitPoint (FD=1.00e-02) & InitPoint (FD=1.00e-04) & InitPoint (FD=1.00e-06)& It 1 Newton (Exact)& It 1 Newton (FD=1.00e-02)& It 1 Newton (FD=1.00e-04)& It 1 Newton (FD=1.00e-06)& It 2 Newton (Exact)& It 2 Newton (FD=1.00e-02)& It 2 Newton (FD=1.00e-04)& It 2 Newton (FD=1.00e-06)
+Problem Name & Dimension  & InitPoint (Exact)  & InitPoint (FD=1.00e-02) & InitPoint (FD=1.00e-04) & InitPoint (FD=1.00e-06) & It 1 Newton (Exact)  & It 1 Newton (FD=1.00e-02) & It 1 Newton (FD=1.00e-04) & It 1 Newton (FD=1.00e-06) & It 2 Newton (Exact)  & It 2 Newton (FD=1.00e-02) & It 2 Newton (FD=1.00e-04) & It 2 Newton (FD=1.00e-06)
+
+
 
 ALLINITU   & 4 & -1.222e+01 (1) & -1.221e+01 (1) & -1.222e+01 (1) & -1.222e+01 (1) & 3.787e-01 (0) & 3.182e-01 (0) & 3.781e-01 (0) & 3.693e-01 (0) & 3.664e+00 (0) & 3.695e+00 (0) & 3.665e+00 (0) & 3.664e+00 (0) 
 BIGGS6     & 6 & -1.748e-01 (0) & -1.875e-01 (0) & -1.749e-01 (0) & -1.749e-01 (0) & -5.088e-02 (0) & -6.148e-02 (0) & -5.099e-02 (0) & -5.112e-02 (0) & -1.047e-01 (0) & -9.407e-02 (0) & -1.046e-01 (0) & -1.047e-01 (0) 
