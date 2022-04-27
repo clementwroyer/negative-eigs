@@ -26,7 +26,7 @@ function [EstString,negativefound] = NES(H,orderoption,buildstyle,verboseflag)
     if n==1 % for 1 x 1 matrices, orderoption must = 1.
         ordopt=1;else ordopt=orderoption;
     end
-    Order=SetOrder(D,n,ordopt,buildstyle)
+    Order=SetOrder(D,n,ordopt,buildstyle);
     
 %% Grows the matrix and update the eigenvalue estimations
     Hestimate=diag(D);
