@@ -4,12 +4,11 @@ Contains the output of our NES experiments
 
 ## Contents
 
-Two type of files: the .mat files contain data about the runs (useful variables, eigenvalues, etc) while the ResNES files present the information in a table format.
+Text files presenting the results of various runs.
 
 ## Naming convention
 
-NFD: Indicates that matrices produced via Newton iterations and finite differences were used
-Heuristics/AllOrders: Indicates which ordering were considered (4 heuristics or all possible ones)
-RandPerm (optional): If present, indicates that a random permutation was applied to every matrix
-dimsXtoY: Problems from dimensions X to Y were considered for that run
-nonegdiags (optional): If present, indicates that matrices with negative diagonal elements were removed from the study.
+*Heuristics/Comparison*: Indicates whether the file runs 4 heuristics or compares the best heuristic with all orderings.
+*Exact/FD/ExactFD*: Indicates whether actual Hessian matrices, finite-difference approximations thereof or both are considered.
+*All/1eMx* (Optional): When finite-difference matrices are used, indicates what tolerances are used (All of them or 10^{-x} with x a positive integer).
+*Determ/RandOrthog/RandPerm*: Indicates whether actual matrices are used (Exact) or whether these matrices are transformed via a random orthogonal matrix (RandOrthog) or a random perturbation of the indices (RandPerm).
