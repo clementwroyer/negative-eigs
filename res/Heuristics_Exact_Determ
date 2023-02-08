@@ -8,9 +8,9 @@ Orderings:
 	 3 - Largest diag to smallest diag
 	 4 - Flipflop smallest/largest diag
 
-Build type 1 gave the best order for 12 out of 85 matrices.
-Build type 2 gave the best order for 7 out of 85 matrices.
-Both builds gave the best order for 66 out of 85 matrices.
+Build type 1 gave the best order for 9 out of 82 matrices.
+Build type 2 gave the best order for 16 out of 82 matrices.
+Both builds gave the best order for 57 out of 82 matrices.
 
 Problem 	| Dim | It Newton | FinDiff | MinEig | BestBuild | MinUpdate | BestOrder
 -----------------------------------------------------
@@ -20,13 +20,13 @@ ALLINITU 	 4 	 1 	0e+00 	3.787e-01 		- 	 - 	 -
 ALLINITU 	 4 	 2 	0e+00 	3.664e+00 		- 	 - 	 -
 BIGGS6 	 6 	 0 	0e+00 	-1.748e-01 		1+2 	 1 	4, +4,  
 BIGGS6 	 6 	 1 	0e+00 	-5.088e-02 		1+2 	 1 	3, +3,  
-BIGGS6 	 6 	 2 	0e+00 	-1.047e-01 		1+2 	 1 	1, 2, 3, 4, +1, 2, 3, 4,  
-BOX3 		 3 	 0 	0e+00 	-7.784e-03 		- 	 - 	 -
-BOX3 		 3 	 1 	0e+00 	9.324e-03 		- 	 - 	 -
-BOX3 		 3 	 2 	0e+00 	4.252e-03 		- 	 - 	 -
+BIGGS6 	 6 	 2 	0e+00 	-1.047e-01 		1+2 	 1 	1, 2, 4, +1, 2, 4,  
+BOX3 	 	 3 	 0 	0e+00 	-7.784e-03 		- 	 - 	 -
+BOX3 	 	 3 	 1 	0e+00 	9.324e-03 		- 	 - 	 -
+BOX3 	 	 3 	 2 	0e+00 	4.252e-03 		- 	 - 	 -
 BRYBND 	 10 	 0 	0e+00 	-7.072e+01 		2 	 6 	2,  
-BRYBND 	 10 	 1 	0e+00 	-5.389e+01 		2 	 5 	2,  
-BRYBND 	 10 	 2 	0e+00 	-2.220e+01 		2 	 7 	2,  
+BRYBND 	 10 	 1 	0e+00 	-5.389e+01 		2 	 6 	2,  
+BRYBND 	 10 	 2 	0e+00 	-2.220e+01 		2 	 9 	2,  
 DENSCHND 	 3 	 0 	0e+00 	-9.301e+05 		- 	 - 	 -
 DENSCHND 	 3 	 1 	0e+00 	-4.007e+05 		- 	 - 	 -
 DENSCHND 	 3 	 2 	0e+00 	-1.726e+05 		- 	 - 	 -
@@ -36,8 +36,8 @@ DENSCHNE 	 3 	 2 	0e+00 	-9.075e-05 		- 	 - 	 -
 DIXMAANA 	 15 	 0 	0e+00 	-3.980e+00 		1+2 	 1 	4, +4,  
 DIXMAANA 	 15 	 1 	0e+00 	8.130e-01 		- 	 - 	 -
 DIXMAANA 	 15 	 2 	0e+00 	-4.766e+00 		1 	 5 	1, 3,  
-DIXMAANB 	 15 	 0 	0e+00 	-8.492e+00 		1+2 	 2 	4, +1, 2,  
-DIXMAANB 	 15 	 1 	0e+00 	-2.308e+00 		2 	 2 	1,  
+DIXMAANB 	 15 	 0 	0e+00 	-8.492e+00 		2 	 3 	1, 2, 4,  
+DIXMAANB 	 15 	 1 	0e+00 	-2.308e+00 		2 	 3 	1,  
 DIXMAANB 	 15 	 2 	0e+00 	6.367e-01 		- 	 - 	 -
 DIXMAANC 	 15 	 0 	0e+00 	-1.898e+01 		1+2 	 1 	1, 2, +1, 2,  
 DIXMAANC 	 15 	 1 	0e+00 	-3.195e+02 		1+2 	 1 	1, +1,  
@@ -49,7 +49,7 @@ DIXMAANE 	 15 	 0 	0e+00 	-5.632e+00 		1 	 5 	1,
 DIXMAANE 	 15 	 1 	0e+00 	-1.903e+00 		1 	 5 	1,  
 DIXMAANE 	 15 	 2 	0e+00 	-4.694e-01 		1 	 5 	1,  
 DIXMAANF 	 15 	 0 	0e+00 	-9.966e+00 		1+2 	 1 	1, 2, +1, 2,  
-DIXMAANF 	 15 	 1 	0e+00 	-4.312e+00 		2 	 2 	1,  
+DIXMAANF 	 15 	 1 	0e+00 	-4.312e+00 		2 	 3 	1, 4,  
 DIXMAANF 	 15 	 2 	0e+00 	-1.332e+00 		2 	 2 	1,  
 DIXMAANG 	 15 	 0 	0e+00 	-2.047e+01 		1+2 	 1 	1, 2, +1, 2,  
 DIXMAANG 	 15 	 1 	0e+00 	-8.598e+00 		1+2 	 1 	1, 2, +1, 2,  
@@ -75,9 +75,9 @@ ENGVAL2 	 3 	 2 	0e+00 	2.628e+02 		- 	 - 	 -
 EXPFIT 	 2 	 0 	0e+00 	-3.915e+01 		1+2 	 1 	1, 2, 3, 4, +1, 2, 3, 4,  
 EXPFIT 	 2 	 1 	0e+00 	-1.378e+01 		1+2 	 1 	1, 2, 3, 4, +1, 2, 3, 4,  
 EXPFIT 	 2 	 2 	0e+00 	-4.336e+00 		1+2 	 1 	1, 2, 3, 4, +1, 2, 3, 4,  
-FMINSURF 	 16 	 0 	0e+00 	-1.041e-17 		1 	 3 	2,  
-FMINSURF 	 16 	 1 	0e+00 	-8.778e-18 		1+2 	 2 	1, 2, 3, 4, +1, 2, 3,  
-FMINSURF 	 16 	 2 	0e+00 	-2.477e-18 		1+2 	 2 	1, 2, 4, +1, 2, 3, 4,  
+FMINSURF 	 16 	 0 	0e+00 	-1.041e-17 		- 	 - 	 -
+FMINSURF 	 16 	 1 	0e+00 	-8.778e-18 		- 	 - 	 -
+FMINSURF 	 16 	 2 	0e+00 	-2.477e-18 		- 	 - 	 -
 FREUROTH 	 10 	 0 	0e+00 	-4.149e+01 		- 	 - 	 -
 FREUROTH 	 10 	 1 	0e+00 	1.106e+00 		- 	 - 	 -
 FREUROTH 	 10 	 2 	0e+00 	-3.918e+02 		- 	 - 	 -
@@ -114,7 +114,7 @@ HIMMELBG 	 2 	 2 	0e+00 	-6.240e-01 		- 	 - 	 -
 HUMPS 		 2 	 0 	0e+00 	-5.457e+02 		- 	 - 	 -
 HUMPS 		 2 	 1 	0e+00 	-7.274e+02 		- 	 - 	 -
 HUMPS 		 2 	 2 	0e+00 	-1.704e+01 		1+2 	 1 	1, 2, 3, 4, +1, 2, 3, 4,  
-KOWOSB 	 4 	 0 	0e+00 	-4.003e-03 		1+2 	 2 	1, 2, 3, 4, +1, 2, 3, 4,  
+KOWOSB 	 4 	 0 	0e+00 	-4.003e-03 		2 	 2 	2, 3,  
 KOWOSB 	 4 	 1 	0e+00 	-1.380e-02 		- 	 - 	 -
 KOWOSB 	 4 	 2 	0e+00 	-6.314e-03 		1+2 	 1 	1, 4, +1, 4,  
 LOGHAIRY 	 2 	 0 	0e+00 	-4.997e-03 		1+2 	 1 	1, 2, 3, 4, +1, 2, 3, 4,  
@@ -130,8 +130,8 @@ MSQRTBLS 	 9 	 0 	0e+00 	-2.768e+00 		- 	 - 	 -
 MSQRTBLS 	 9 	 1 	0e+00 	-1.340e+00 		1+2 	 1 	4, +4,  
 MSQRTBLS 	 9 	 2 	0e+00 	-1.247e+01 		1+2 	 5 	2, +2,  
 OSBORNEA 	 5 	 0 	0e+00 	-4.468e+03 		- 	 - 	 -
-OSBORNEA 	 5 	 1 	0e+00 	-3.455e-01 		1+2 	 2 	2, 3, 4, +1, 2, 3,  
-OSBORNEA 	 5 	 2 	0e+00 	-5.779e-01 		1+2 	 2 	2, 3, 4, +1, 2, 3,  
+OSBORNEA 	 5 	 1 	0e+00 	-3.455e-01 		1+2 	 6 	2, +1, 2, 3, 4,  
+OSBORNEA 	 5 	 2 	0e+00 	-5.779e-01 		2 	 3 	4,  
 OSBORNEB 	 11 	 0 	0e+00 	-3.532e+00 		- 	 - 	 -
 OSBORNEB 	 11 	 1 	0e+00 	-1.603e+14 		1+2 	 1 	3, +3,  
 OSBORNEB 	 11 	 2 	0e+00 	-5.827e+13 		1+2 	 1 	2, 3, +2, 3,  
@@ -146,29 +146,29 @@ SINQUAD 	 50 	 1 	0e+00 	-1.437e+06 		- 	 - 	 -
 SINQUAD 	 50 	 2 	0e+00 	-6.388e+05 		- 	 - 	 -
 SPARSINE 	 10 	 0 	0e+00 	-4.172e+01 		- 	 - 	 -
 SPARSINE 	 10 	 1 	0e+00 	-1.072e+01 		1 	 3 	2,  
-SPARSINE 	 10 	 2 	0e+00 	-1.306e-01 		1 	 8 	1, 2,  
+SPARSINE 	 10 	 2 	0e+00 	-1.306e-01 		2 	 15 	2,  
 SPMSRTLS 	 28 	 0 	0e+00 	-7.035e+00 		- 	 - 	 -
 SPMSRTLS 	 28 	 1 	0e+00 	-7.997e+00 		- 	 - 	 -
 SPMSRTLS 	 28 	 2 	0e+00 	-8.005e+00 		- 	 - 	 -
 VAREIGVL 	 10 	 0 	0e+00 	-2.573e+00 		1 	 7 	3,  
 VAREIGVL 	 10 	 1 	0e+00 	-8.853e-01 		1+2 	 1 	4, +4,  
-VAREIGVL 	 10 	 2 	0e+00 	-6.641e-02 		1 	 13 	4,  
+VAREIGVL 	 10 	 2 	0e+00 	-6.641e-02 		2 	 28 	4,  
 VIBRBEAM 	 8 	 0 	0e+00 	-9.021e+10 		1+2 	 1 	3, +3,  
-VIBRBEAM 	 8 	 1 	0e+00 	-1.420e+08 		1+2 	 2 	1, 2, 3, +1, 2,  
+VIBRBEAM 	 8 	 1 	0e+00 	-1.420e+08 		2 	 3 	3,  
 VIBRBEAM 	 8 	 2 	0e+00 	-1.284e+12 		- 	 - 	 -
-WATSON 	 12 	 0 	0e+00 	-4.897e-01 		1+2 	 2 	2, 3, +1, 3,  
-WATSON 	 12 	 1 	0e+00 	-9.017e-02 		1+2 	 2 	3, +3,  
-WATSON 	 12 	 2 	0e+00 	-9.141e-03 		1+2 	 2 	3, +3,  
+WATSON 	 12 	 0 	0e+00 	-4.897e-01 		2 	 8 	3,  
+WATSON 	 12 	 1 	0e+00 	-9.017e-02 		2 	 8 	3,  
+WATSON 	 12 	 2 	0e+00 	-9.141e-03 		2 	 8 	3,  
 YFITU 		 3 	 0 	0e+00 	-4.642e+00 		1+2 	 1 	2, +2,  
 YFITU 		 3 	 1 	0e+00 	-1.771e+03 		1+2 	 1 	2, 4, +2, 4,  
 YFITU 		 3 	 2 	0e+00 	-1.739e+02 		1+2 	 1 	4, +4,  
 =============================================================
-Percentage of problems with best strategies [1 2 3 4] (over 85 matrices):
-	 For build 1: [63.5 57.6 36.5 42.4]
-	 For build 2: [63.5 57.6 34.1 36.5]
-Without two-dimensional problems (73 matrices):
-	 For build 1: [57.5 50.7 26.0 32.9]
-	 For build 2: [57.5 50.7 23.3 26.0]
-Without two- and three-dimensional problems (63 matrices):
-	 For build 1: [55.6 49.2 27.0 23.8]
-	 For build 2: [55.6 49.2 23.8 15.9]
+Percentage of problems with best strategies [1 2 3 4] (over 82 matrices):
+	 For build 1: [59.8 50.0 26.8 35.4]
+	 For build 2: [58.5 56.1 31.7 41.5]
+Without two-dimensional problems (70 matrices):
+	 For build 1: [52.9 41.4 14.3 24.3]
+	 For build 2: [51.4 48.6 20.0 31.4]
+Without two- and three-dimensional problems (60 matrices):
+	 For build 1: [50.0 38.3 13.3 13.3]
+	 For build 2: [48.3 46.7 20.0 21.7]

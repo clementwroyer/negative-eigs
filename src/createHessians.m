@@ -43,13 +43,17 @@ pbnames = PROBS{1};
 pbdims = PROBS{2};
 BVALS = PROBS{3};
 %
+tolneg=1e-12;%Tolerance for being sufficiently negative
+%
 %Using finite difference approximation to the Hessian matrix
+%hFD = [1e-2,1e-4,1e-6];
 hFD = [0,1e-2,1e-4,1e-6];
 %hFD=[0];
 %hFD = [];
 nh = length(hFD);
 % Optional: Build more matrices by performing iterations of Newton's method
 nitsN = 2;
+%nitsN = 0;
 % Creating output file and structure
 %
 fid2 = fopen('HessianEigs','w');
@@ -103,7 +107,9 @@ for numpb = 1:npbs
 %
 	fprintf('%s & %d\n',name,n);
     g0 = cutest_grad(x0);
-	H0 = cutest_hess(x0);
+    if ~strcmp(name,'BLEACHNG')
+        H0 = cutest_hess(x0);
+    end
 
 %   Compute matrices related to the initial point
 
@@ -116,7 +122,7 @@ for numpb = 1:npbs
             end
 	        [~,l0] = eigs(H0,1,'sa');
             pbeigs(numpb,iFD,1)=l0;
-            if l0<0
+            if l0<-tolneg
                 nb_negcurv=nb_negcurv+1;
             end
             fprintf(fid2,'%s & %d & %1.3e (%d) ',name,n,l0,...
@@ -131,7 +137,7 @@ for numpb = 1:npbs
                 end
                 [~,l0FD] = eigs(H0FD,1,'sa');
                 pbeigs(numpb,iFD,1)=l0FD;
-                if l0FD<0
+                if l0FD<-tolneg
                     nb_negcurv=nb_negcurv+1;
                 end
             else
@@ -160,7 +166,7 @@ for numpb = 1:npbs
                     nb_negdiag=nb_negdiag+1;
                 end
 	            [~,l0] = eigs(H0,1,'sa');
-                if l0<0
+                if l0<-tolneg
                     nb_negcurv=nb_negcurv+1;
                 end
                 pbeigs(numpb,iFD,1+jN)=l0;
@@ -176,7 +182,7 @@ for numpb = 1:npbs
                     end
                     [~,l0FD] = eigs(H0FD,1,'sa');
                     pbeigs(numpb,iFD,1+jN)=l0FD;
-                    if l0FD<0
+                    if l0FD<-tolneg
                         nb_negcurv=nb_negcurv+1;
                     end
                 else
@@ -199,7 +205,7 @@ nb_negcurv,nbmats_total);
 %
 fclose(fid2);
 %
-save HESSIANS pbnames pbdims pbmats pbeigs nitsN hFD negdiags nb_negdiag nb_negcurv
+save HESSIANS pbnames pbdims pbmats pbeigs nitsN hFD negdiags nb_negdiag nb_negcurv tolneg
 %if ~findiff
 %   save HESSIANS pbnames pbdims pbmats pbeigs nitsN pbmatsN pbeigsN findiff negdiags negdiagsN nb_negdiag nb_negcurv
 %else

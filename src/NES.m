@@ -20,6 +20,7 @@ function [EstString,negativefound] = NES(H,orderoption,buildstyle,verboseflag)
 %         detected a negative eigenvalue or guessed that all eigenvalues
 %         are positive)
 
+%format long
 %% Set up
     D=diag(H);n=length(D);Hestimate=diag(D);
 %% Set order of growth for H
@@ -44,11 +45,19 @@ function [EstString,negativefound] = NES(H,orderoption,buildstyle,verboseflag)
             j=Order(2,counter);
             Hestimate(i,j)=H(i,j);
             Hestimate(j,i)=H(j,i);
-            EstString=eig(Hestimate);
-            if verboseflag>1
-                fprintf('At iteration %d, the minimal estimated eigenvalue is %2.2f\n', counter, min(EstString));
+%           Correction - Use the largest principle submatrix or submatrices
+%           contained in Hestimate
+            [Hps,nps,sps] = findsubmatrix(Hestimate,Order,counter);
+            emin = Inf;
+            for ips=1:nps
+                EstString = eig(Hps{ips});
+                emin = min(emin,min(EstString));
             end
-            if negativefound==0 && min(EstString)<0
+            if verboseflag>1
+                fprintf('At iteration %d, the minimal estimated eigenvalue is %2.2f\n', counter, emin);
+                fprintf('This estimate was computed based on %d by %d submatrices\n',sps,sps);
+            end
+            if negativefound==0 && emin<0
                 negativefound=counter;
             end
         end

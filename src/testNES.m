@@ -13,6 +13,8 @@
 clear all
 close all
 %
+%format long
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load Hessian matrices
 load('HESSIANS');
@@ -24,13 +26,16 @@ npbs = length(pbdims);
 %
 % Choose allowed dimensions 
 maxdim = 50;
+%maxdim = 16;
 %maxdim=10;
 %mindim=9;
-maxdim=8;
+%maxdim=8;
 %maxdim = 5;
 %maxdim = 11;
-mindim = 4;
-%mindim = 2;
+%mindim=10;
+%mindim = 4;
+mindim = 2;
+%mindim = 16;
 %mindim = 4;
 % Select problems with appropriate dimensions
 Imat = find(pbdims<=maxdim & pbdims>=mindim);
@@ -39,8 +44,10 @@ npbsel = length(pbdims(Imat)); % Number of problems selected
 % Iterations to be kept
 nitsNsel=nitsN;
 % Finite difference values to be kept
-selFD = [1 2 3 4];
-%selFD = [1];
+%selFD = [1 2 3 4];
+selFD = [1];
+%selFD = [2 3 4];
+%selFD = [4];
 nFDsel = length(selFD);
 % Total number of matrices
 nmat = npbsel*(1+nitsNsel)*nFDsel;
@@ -51,7 +58,7 @@ if maxdim>8
 else
     nocombi=0;
 end
-nocombi=0;
+%nocombi=0;
 %nocombi=1;
 %nocombi=-1;
 % Plot all combinations in combinatorial case?
@@ -61,8 +68,8 @@ plotcombi=0;
 randorthog=0;
 %randorthog=1;
 % Random permutation matrix
-randper=0;
-%randper=1;%
+%randper=0;
+randper=1;%
 if randper && randorthog
     randorthog=0;
 end
@@ -106,7 +113,7 @@ for i=1:npbsel
         else
             fprintf('\t Init Pt (FD=%1.0e) \n',valFD);
         end 
-        if pbeigs(ipb,selFD(iFD),1)<0
+        if pbeigs(ipb,selFD(iFD),1)<-tolneg
             myH = pbmats{ipb}{iselFD}{1};
             if randorthog || randper
                 myH = myQ*myH*myQ';
@@ -142,7 +149,7 @@ for i=1:npbsel
             else
                 fprintf('\t It Newton %d (FD=%1.0e) \n',jN,valFD);
             end 
-            if pbeigs(ipb,iselFD,1+jN)<0
+            if pbeigs(ipb,iselFD,1+jN)<-tolneg
                 myH = pbmats{ipb}{iselFD}{1+jN};
                 if randorthog || randper
                     myH = myQ*myH*myQ';
